@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification, AdamW, get_linear_schedule_with_warmup
@@ -15,13 +16,25 @@ MAX_LEN = 128  # 序列最大长度（可根据实际情况调整）
 BATCH_SIZE = 32
 EPOCHS = 5
 LEARNING_RATE = 2e-5
-MODEL_NAME = 'bert-base-uncased'  # 英文数据使用 uncased
+MODEL_NAME = 'C:/Users/86155/Desktop/PythonProject/model/bert-base-uncased'  # 已下载至本地 英文数据使用 uncased
 
 
 # ==================== 数据准备 ====================
 def load_and_prepare_data(csv_path):
-    """读取CSV，构造文本和标签"""
+    """读取CSV，从parameters中解析category和sub_category，构造文本和标签"""
     df = pd.read_csv(csv_path)
+    # 解析 parameters 列，格式如 "Clothing and Accessories, Bottomwear, Cotton Blend, Multicolor, York"
+    def parse_params(param_str):
+        parts = param_str.split(', ')
+        # 返回前两个字段作为主类和次类，若字段不足则填充'unknown'
+        category = parts[0] if len(parts) > 0 else 'unknown'
+        sub_category = parts[1] if len(parts) > 1 else 'unknown'
+        return category, sub_category
+
+    # 应用解析
+    df[['category', 'sub_category']] = df['parameters'].apply(
+        lambda x: pd.Series(parse_params(str(x)))
+    )
     # 组合文本：title + description（中间加空格）
     df['text'] = df['title'].fillna('') + ' ' + df['description'].fillna('')
     # 处理缺失标签：若category或sub_category为空，填充为'unknown'
@@ -102,7 +115,6 @@ def train_model(model, train_loader, val_loader, device, epochs, lr):
     scheduler = get_linear_schedule_with_warmup(optimizer,
                                                 num_warmup_steps=int(0.1 * total_steps),
                                                 num_training_steps=total_steps)
-    # 损失函数
     loss_fn = torch.nn.CrossEntropyLoss()
     best_val_loss = float('inf')
 
@@ -110,7 +122,9 @@ def train_model(model, train_loader, val_loader, device, epochs, lr):
         print(f"\nEpoch {epoch + 1}/{epochs}")
         model.train()
         total_loss = 0
-        for batch in train_loader:
+        # 使用 tqdm 显示进度条
+        progress_bar = tqdm(train_loader, desc=f"Training Epoch {epoch + 1}", unit="batch")
+        for batch_idx, batch in enumerate(progress_bar):
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
             cat_labels = batch['category_label'].to(device)
@@ -120,12 +134,16 @@ def train_model(model, train_loader, val_loader, device, epochs, lr):
             cat_logits, sub_logits = model(input_ids, attention_mask)
             loss_cat = loss_fn(cat_logits, cat_labels)
             loss_sub = loss_fn(sub_logits, sub_labels)
-            loss = loss_cat + loss_sub  # 总损失为两个损失之和
+            loss = loss_cat + loss_sub
             total_loss += loss.item()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             scheduler.step()
+
+            # 可选：每 50 步显示一次当前 loss
+            if batch_idx % 50 == 0:
+                progress_bar.set_postfix(loss=loss.item())
 
         avg_loss = total_loss / len(train_loader)
         print(f"Train loss: {avg_loss:.4f}")
@@ -193,7 +211,7 @@ if __name__ == "__main__":
     # 1. 加载数据
     # 注意：这里假设你的预处理后的CSV文件名为 'processed.csv'，且包含 'title', 'description', 'category', 'sub_category' 列
     # 如果你的文件列名不同，请相应修改
-    df = load_and_prepare_data('processed.csv')
+    df = load_and_prepare_data('C:/Users/86155/Desktop/PythonProject/data/processed/processed.csv')
     print(f"数据总量: {len(df)}")
 
     # 2. 划分训练集和验证集

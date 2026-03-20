@@ -18,12 +18,14 @@ libraries_to_test = {
 
     # Excel 处理
     'openpyxl': {'required': True},  # 若不需要可改为 False
+    'tqdm': {'required': False},  # 若不需要可改为 False
 
     # 机器学习 / 深度学习
     'sklearn': {'required': False, 'import_name': 'sklearn'},  # 注意：通常导入 sklearn 而不是 scikit-learn
     'torch': {'required': False},
     'transformers': {'required': False},
     'seqeval': {'required': False},
+    'joblib':{'required': False},
 
     # 其他常用标准库（标准库无需测试，但为了完整性可以保留）
     'pathlib': {'required': False, 'is_std': True},
