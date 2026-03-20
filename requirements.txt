@@ -1,0 +1,44 @@
+# 项目依赖包
+# 根据规则R1的技术栈约束配置
+
+# 深度学习框架
+# PyTorch for BERT
+# TensorFlow/Keras for CNN
+torch>=2.0.0
+transformers>=4.30.0
+tensorflow>=2.10.0
+keras>=2.10.0
+
+# 机器学习库
+scikit-learn>=1.2.0
+pandas>=1.5.0
+numpy>=1.21.0
+
+# 可解释性分析
+shap>=0.41.0
+lime>=0.2.0
+
+# 可视化库
+matplotlib>=3.5.0
+seaborn>=0.12.0
+plotly>=5.10.0
+
+# 数据处理和工具
+jupyter>=1.0.0
+pillow>=9.0.0
+opencv-python>=4.5.0
+
+# 其他工具库
+tqdm>=4.60.0
+joblib>=1.2.0
+
+# 爬虫相关依赖
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+lxml>=4.9.0
+
+# 可选：用于数据序列化
+pyarrow>=10.0.0
+
+# BERT无监督属性抽取额外依赖
+openpyxl>=3.1.0  # 用于处理Excel文件

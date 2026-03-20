@@ -1,0 +1,10 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-03-20T06:40:09.073Z
+provider: 
+---
+
+每次运行代码时检查当前文件位置与目标文件位置
+禁止在输出中加入✅❌等emoji符号
