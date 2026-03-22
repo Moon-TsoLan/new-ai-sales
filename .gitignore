@@ -148,8 +148,7 @@ ehthumbs.db
 Thumbs.db
 
 # Project-specific: ignore large model files
-model/bert-base-uncased/pytorch_model.bin
-model/bert_classifier/best_classifier.pth
+model/
 
 # You can also ignore all .bin and .pth files if you want:
 # *.bin
