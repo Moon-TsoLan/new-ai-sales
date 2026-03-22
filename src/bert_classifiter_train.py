@@ -1,19 +1,22 @@
+import os
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset, DataLoader
-from transformers import BertTokenizer, BertForSequenceClassification, AdamW, get_linear_schedule_with_warmup
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, classification_report
-import warnings
+from torch.optim import AdamW   # PyTorch 1.10+ 自带 AdamW
+from transformers import BertTokenizer, BertForSequenceClassification, get_linear_schedule_with_warmup
 
+import warnings
 warnings.filterwarnings('ignore')
+
 
 # ==================== 配置参数 ====================
 MAX_LEN = 128  # 序列最大长度（可根据实际情况调整）
-BATCH_SIZE = 32
+BATCH_SIZE = 16 # MX570 2GB显存
 EPOCHS = 5
 LEARNING_RATE = 2e-5
 MODEL_NAME = 'C:/Users/86155/Desktop/PythonProject/model/bert-base-uncased'  # 已下载至本地 英文数据使用 uncased
@@ -180,11 +183,11 @@ def train_model(model, train_loader, val_loader, device, epochs, lr):
         # 保存最佳模型（根据验证总损失）
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
-            torch.save(model.state_dict(), 'best_classifier.pth')
+            torch.save(model.state_dict(), '../model/bert_classifier/best_classifier.pth')
             print("Best model saved.")
 
     # 加载最佳模型
-    model.load_state_dict(torch.load('best_classifier.pth'))
+    model.load_state_dict(torch.load('../model/bert_classifier/best_classifier.pth'))
     return model
 
 
@@ -260,7 +263,7 @@ if __name__ == "__main__":
     # 可选：保存编码器和模型配置，供后续部署使用
     import joblib
 
-    joblib.dump(category_encoder, 'category_encoder.pkl')
-    joblib.dump(sub_encoder, 'sub_encoder.pkl')
-    torch.save(trained_model.state_dict(), 'best_classifier.pth')
+    joblib.dump(category_encoder, '../model/bert_classifier/category_encoder.pkl')
+    joblib.dump(sub_encoder, '../model/bert_classifier/sub_encoder.pkl')
+    torch.save(trained_model.state_dict(), '../model/bert_classifier/best_classifier.pth')
     print("模型和编码器已保存。")
