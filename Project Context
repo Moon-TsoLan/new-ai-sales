@@ -5,29 +5,44 @@
 
 核心任务流程：
 一、文本特征提取模型的训练
-1、数据集预处理：(已完成)
-1.从output.xlsx中去掉_id,crawled_at,out_of_stock,seller,url字段(已完成)
-2.从output.xlsx中去掉images或discount为空的数据(已完成)
-3.从product_details的子字段中提取材质，作为新的字段(已完成)
-4.将{类型，次级类型，材质，颜色，品牌}作为新的字段"产品参数"(已完成)
-5.将{产品名称，产品描述，产品参数}保存为csv文件放在./data/processed/processed.csv(已完成)
+1、对自然语言处理数据集input.csv预处理：(已完成)
+    1.从input.csv中去掉_id,crawled_at,out_of_stock,seller,url字段(已完成)
+    2.从input.csv中去掉images或discount为空的数据(已完成)
+    3.从product_details的子字段中提取材质，作为新的字段(已完成)
+    4.将{类型，次级类型，材质，颜色，品牌}作为新的字段"parameters"(已完成)
+    5.将{产品名称，产品描述，产品参数}保存为csv文件放在./data/processed/processed.csv(已完成)
+2、训练文本特征提取模型：使用bert_base_uncased预训练模型进行训练(已完成)
+    1.训练出bert分类器模型，用于从{产品名称，产品描述}中提取{类型，次级类型}，模型存储于./model/bert_classifier/best_classifier.pth(已完成)
+    2.训练出bert序列抽取模型，用于从{产品名称，产品描述}中提取{材质，颜色，品牌}，模型存储于./model/bert_ner/best_ner_model.pth(已完成)
 
-
-2、训练文本特征提取模型：
-
-
-以下请先忽略
 二、图像特征提取模型的训练
-1、数据获取：{商品图片，商品属性}数据集
-2、数据清洗与预处理
-3、训练图像特征提取模型：使用 CNN (ResNet 预训练) 作为预训练模型进行训练
+1、对图像特征提取模型数据集new_input.csv预处理：(已完成)
+    1.下载图片至data/images目录，图片名称为pid.jpg
+    2.从new_input.csv中去掉_id,crawled_at,out_of_stock,seller,url等字段
+    3.将预处理后的数据集保存至data/processed/new_input_processed.csv
+2、训练图像风格和主颜色提取模型：使用ResNet50预训练模型和KMeans聚类算法
+    1.通过将图片放入ResNet50模型中前向传播，提取图片特征
+    2.使用KMeans聚类算法将图片特征聚类为n个风格簇(n取在当前数据集上最优的k值)
+    3.将风格簇和主颜色保存至data/processed/new_input_style_color.csv
+    4.保存当前n个风格簇的索引，用于后续复用
 
 三、关联与预测模型的构建
-1、搜集没有打标的{商品描述，商品图片，商品销量}数据
-2、使用文本特征提取模型提取商品描述中的属性特征
-3、使用图像特征提取模型提取商品图片中的颜色/风格/纹理特征
-4、整合提取的特征，构建关联模型：回归分析 + 决策树
-5、模型可解释性分析：SHAP + LIME
-6、全流程测试与可视化展示
+1、文本特征提取
+    1.从data/processed/new_input_processed.csv中读取{pid，title，description}，命名为data
+    2.将{title，description}作为bert_classifier的输入，提取{category，sub_category}，并合并入data
+    3.将{title，description}作为bert_ner的输入，提取{fabric，color，brand}，并合并入data
+2、图像特征提取
+    1.根据data中的pid，找到images目录下的图片，将图片放入ResNet50模型中前向传播，提取代表主颜色和风格的多维向量
+    2.将多维向量按照主颜色划分规则和KMeans索引，分配{main_color,style}的值，并合并入data
 
-技术栈：Python, PyTorch, TensorFlow/Keras, Scikit-learn, SHAP, LIME, Matplotlib/Seaborn/Plotly
+3、构建两种关联模型：回归分析 + 决策树
+    1.将data划分为训练集和测试集，训练集为随机的90%数据，测试集为剩余的10%数据
+    2.使用训练集中的{category，sub_category，fabric，color，brand，style，color}作为自变量，{sales，repeat_rate，avarage_rating}作为因变量，构建回归分析模型和决策树模型
+    3.将回归分析模型和决策树模型保存至model/regression_model/best_regression_model.pth和model/decision_tree_model/best_decision_tree_model.pth
+
+4、关联模型测试与可解释性分析
+    1.将测试集中的{category，sub_category，fabric，color，brand，style，color}作为自变量，输入回归分析模型和决策树模型
+    2.将得到的{sales，repeat_rate，avarage_rating}同元数据做对比，计算差值
+    3.使用SHAP进行可解释性分析，并将分析结果以多元的可视化展示
+
+技术栈：Python, PyTorch, TensorFlow/Keras, Scikit-learn, Matplotlib/Seaborn/Plotly

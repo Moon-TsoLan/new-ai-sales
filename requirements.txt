@@ -5,6 +5,7 @@
 # PyTorch for BERT
 # TensorFlow/Keras for CNN
 torch>=2.0.0
+torchvision>=0.15.0
 transformers>=4.30.0
 tensorflow>=2.10.0
 keras>=2.10.0

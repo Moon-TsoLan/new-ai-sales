@@ -36,12 +36,16 @@ libraries_to_test = {
     'transformers': {'required': False},
     'seqeval': {'required': False},
     'joblib':{'required': False},
+    'shap':{'required': True},
+    'scikit-learn':{'required': True},
 
     # 其他常用标准库（标准库无需测试，但为了完整性可以保留）
     'pathlib': {'required': False, 'is_std': True},
     'ast': {'required': False, 'is_std': True},
     'warnings': {'required': False, 'is_std': True},
-    'xz': {'required': True},
+    # 说明：原脚本使用 'xz' 作为必装项，可能导致环境检查误失败；
+    # 这里改为标准库 'lzma'（对应 xz 压缩格式的实现）。
+    'lzma': {'required': True, 'is_std': True},
 }
 
 
@@ -52,10 +56,10 @@ def test_library(name, required=True, import_name=None, is_std=False):
         # 标准库直接导入，不打印版本
         try:
             lib = importlib.import_module(name)
-            print(f"✅ {name:15s} (标准库)  路径: {lib.__file__ if hasattr(lib, '__file__') else '内置'}")
+            print(f"[OK] {name:15s} (标准库)  路径: {lib.__file__ if hasattr(lib, '__file__') else '内置'}")
             return True
         except ImportError:
-            print(f"❌ {name:15s} (标准库)  未找到")
+            print(f"[FAIL] {name:15s} (标准库)  未找到")
             return False
 
     # 第三方库：尝试导入并获取版本
@@ -72,20 +76,20 @@ def test_library(name, required=True, import_name=None, is_std=False):
         conda_env_path = Path(sys.prefix) / 'Lib' / 'site-packages'
         is_in_conda = str(conda_env_path) in file_path if file_path != '未知' else False
         location = file_path if file_path != '未知' else '内置'
-        location_info = f"{location} (✅ Conda环境)" if is_in_conda else location
+        location_info = f"{location} (OK Conda环境)" if is_in_conda else location
 
-        print(f"✅ {name:15s} 版本: {version:<12} 路径: {location_info}")
+        print(f"[OK] {name:15s} 版本: {version:<12} 路径: {location_info}")
         return True
 
     except ImportError:
         if required:
-            print(f"❌ {name:15s} 未安装（必要库，脚本将退出）")
+            print(f"[FAIL] {name:15s} 未安装（必要库，脚本将退出）")
             sys.exit(1)
         else:
-            print(f"⚠️  {name:15s} 未安装（可选，跳过）")
+            print(f"[WARN] {name:15s} 未安装（可选，跳过）")
             return False
     except Exception as e:
-        print(f"⚠️  {name:15s} 导入时出错: {e}")
+        print(f"[WARN] {name:15s} 导入时出错: {e}")
         return False
 
 
@@ -107,9 +111,14 @@ if __name__ == "__main__":
         )
     # 测试torch.cuda
     import torch
-    print(torch.cuda.is_available())  # 应输出 True
-    print(torch.cuda.get_device_name(0))  # 应显示 NVIDIA GeForce MX570
-    print(torch.version.cuda)
+    cuda_available = torch.cuda.is_available()
+    print(f"torch.cuda.is_available(): {cuda_available}")
+    if cuda_available:
+        # CUDA 可用时才获取设备信息，避免无 CUDA 环境直接崩溃
+        print(f"torch.cuda.get_device_name(0): {torch.cuda.get_device_name(0)}")
+        print(f"torch.version.cuda: {torch.version.cuda}")
+    else:
+        print("CUDA不可用（跳过 get_device_name / CUDA 版本）")
 
     print("\n" + "=" * 60)
     print(" 测试完成。")
