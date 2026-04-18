@@ -149,7 +149,9 @@ Thumbs.db
 
 # Project-specific: ignore large model files
 model/
-
+uploads/
+data/images
+user/
 # You can also ignore all .bin and .pth files if you want:
 # *.bin
 # *.pth

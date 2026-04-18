@@ -1,0 +1,42 @@
+{
+  "model": "MiniMax-M2.5",
+  "eval_on": "brand/color: canonical vs gold; material: base-material mapping vs gold",
+  "catalog_vocab_sizes": {
+    "brand": 251,
+    "color": 106,
+    "material": 138
+  },
+  "material_base_lexicon_size": 57,
+  "input_csv": "data\\processed\\processed.csv",
+  "processed_count": 1674,
+  "evaluated_count": 1674,
+  "exact_match_ratio_all_fields": 0.03942652329749104,
+  "field_metrics": {
+    "brand": {
+      "precision": 0.6160714285714286,
+      "recall": 0.35384615384615387,
+      "f1": 0.44951140065146583,
+      "tp": 552,
+      "fp": 344,
+      "fn": 1008
+    },
+    "color": {
+      "precision": 0.22892347600518806,
+      "recall": 0.36886102403343785,
+      "f1": 0.28251300520208084,
+      "tp": 353,
+      "fp": 1189,
+      "fn": 604
+    },
+    "material": {
+      "precision": 0.6216981132075472,
+      "recall": 0.34611344537815125,
+      "f1": 0.4446693657219973,
+      "tp": 659,
+      "fp": 401,
+      "fn": 1245
+    }
+  },
+  "output_jsonl": "output\\agent_bio_annotations.jsonl",
+  "error_log": "output\\agent_bio_errors.log"
+}

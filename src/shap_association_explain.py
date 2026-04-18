@@ -38,7 +38,7 @@ class Config:
     bert_classifier_path: str = r"C:\Users\86155\Desktop\PythonProject\model\bert_classifier\best_classifier.pth"
     bert_category_encoder_path: str = r"C:\Users\86155\Desktop\PythonProject\model\bert_classifier\category_encoder.pkl"
     bert_sub_encoder_path: str = r"C:\Users\86155\Desktop\PythonProject\model\bert_classifier\sub_encoder.pkl"
-    bert_ner_path: str = r"C:\Users\86155\Desktop\PythonProject\model\bert_ner\best_ner_model.pth"
+    bert_ner_path: str = r"C:\Users\86155\Desktop\PythonProject\model\bert_ner_agent\bert_ner_agent.pth"
     style_kmeans_path: str = r"C:\Users\86155\Desktop\PythonProject\model\resnet50\A_style_kmeans.pkl"
 
     regression_model_path: str = r"C:\Users\86155\Desktop\PythonProject\model\regression_model\best_regression_model.pth"
@@ -64,7 +64,7 @@ class MultiOutputBertClassifier(nn.Module):
         return self.category_classifier(pooled_output), self.sub_classifier(pooled_output)
 
 
-LABEL_LIST = ["O", "B-material", "I-material", "B-color", "I-color", "B-brand", "I-brand"]
+LABEL_LIST = ["O", "B-BRAND", "I-BRAND", "B-COLOR", "I-COLOR", "B-FABRIC", "I-FABRIC"]
 id2label = {idx: label for idx, label in enumerate(LABEL_LIST)}
 
 
@@ -111,6 +111,12 @@ def _clean_wordpiece(tokens: List[str]) -> str:
 
 def _decode_entities(tokens: List[str], label_ids: List[int]) -> Dict[str, str]:
     bucket = {"material": [], "color": [], "brand": []}
+    label_to_field = {
+        "material": "material",
+        "fabric": "material",
+        "color": "color",
+        "brand": "brand",
+    }
     current_tokens = []
     current_field = None
     for token, label_id in zip(tokens, label_ids):
@@ -125,7 +131,7 @@ def _decode_entities(tokens: List[str], label_ids: List[int]) -> Dict[str, str]:
         if label.startswith("B-"):
             if current_tokens and current_field:
                 bucket[current_field].append(_clean_wordpiece(current_tokens))
-            current_field = {"material": "material", "color": "color", "brand": "brand"}.get(label[2:], None)
+            current_field = label_to_field.get(label[2:].lower(), None)
             current_tokens = [token] if current_field else []
         elif label.startswith("I-") and current_field is not None:
             current_tokens.append(token)
@@ -256,32 +262,48 @@ def _save_multi_plots(
     def _to_dense_row(x):
         return _to_dense_2d(x)[0].ravel()
 
+    def _pretty_feature_name(raw_name: str) -> str:
+        # sklearn ColumnTransformer + OneHotEncoder names look like: cat__brand_Adidas
+        name = raw_name
+        if name.startswith("cat__"):
+            name = name[5:]
+        for field in FEATURE_COLS:
+            prefix = f"{field}_"
+            if name.startswith(prefix):
+                value = name[len(prefix) :]
+                return f"{field}={value}"
+        return name
+
+    pretty_names = [_pretty_feature_name(x) for x in feat_names]
+
     Xt_bg_dense = _to_dense_2d(Xt_bg)
     Xt_eval_dense = _to_dense_2d(Xt_eval)
+    Xt_bg_df = pd.DataFrame(Xt_bg_dense, columns=pretty_names)
+    Xt_eval_df = pd.DataFrame(Xt_eval_dense, columns=pretty_names)
 
     if isinstance(est, DecisionTreeRegressor):
         # 避免 tree_path_dependent 的叶子覆盖限制
         try:
-            explainer = shap.TreeExplainer(est, data=Xt_bg_dense, feature_perturbation="interventional")
+            explainer = shap.TreeExplainer(est, data=Xt_bg_df, feature_perturbation="interventional")
         except Exception:
             try:
                 explainer = shap.TreeExplainer(est)
             except Exception:
-                explainer = shap.Explainer(est.predict, Xt_bg_dense)
+                explainer = shap.Explainer(est.predict, Xt_bg_df)
     elif isinstance(est, LinearRegression):
-        explainer = shap.LinearExplainer(est, Xt_bg_dense)
+        explainer = shap.LinearExplainer(est, Xt_bg_df)
     else:
-        explainer = shap.Explainer(est.predict, Xt_bg_dense)
+        explainer = shap.Explainer(est.predict, Xt_bg_df)
 
     try:
-        sv = explainer(Xt_eval_dense)
+        sv = explainer(Xt_eval_df)
     except Exception:
         # 某些版本在调用阶段仍可能触发 ExplainerError，统一兜底
-        fallback = shap.Explainer(est.predict, Xt_bg_dense)
-        sv = fallback(Xt_eval_dense)
+        fallback = shap.Explainer(est.predict, Xt_bg_df)
+        sv = fallback(Xt_eval_df)
 
     plt.figure(figsize=(10, 6))
-    shap.summary_plot(sv, Xt_eval_dense, feature_names=feat_names, show=False)
+    shap.summary_plot(sv, Xt_eval_df, show=False)
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, f"summary_{model_tag}_{target_name}.png"), dpi=200, bbox_inches="tight")
     plt.close()
@@ -298,12 +320,12 @@ def _save_multi_plots(
     plt.savefig(os.path.join(out_dir, f"waterfall_{model_tag}_{target_name}.png"), dpi=200, bbox_inches="tight")
     plt.close()
 
-    force_features = _to_dense_row(Xt_eval_dense)
+    force_features = _to_dense_row(Xt_eval_df)
     force_html = shap.force_plot(
         sv.base_values[0],
         sv.values[0],
         features=force_features,
-        feature_names=feat_names,
+        feature_names=pretty_names,
     )
     shap.save_html(os.path.join(out_dir, f"force_{model_tag}_{target_name}.html"), force_html)
 
