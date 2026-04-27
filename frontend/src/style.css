@@ -58,7 +58,7 @@ body {
 }
 
 .sidebar.collapsed .logo-name,
-.sidebar.collapsed .history-item span,
+.sidebar.collapsed .history-item .history-item-title,
 .sidebar.collapsed .user-info span {
   opacity: 0;
   transform: translateX(-4px);
@@ -251,12 +251,36 @@ body {
 .history-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 10px 8px 10px 12px;
   border-radius: 12px;
   cursor: pointer;
   color: #334155;
   font-size: 0.9rem;
+}
+
+.history-item-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-item-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.history-item-actions .ant-btn.history-delete-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .history-item:hover {
@@ -285,20 +309,36 @@ body {
   gap: 12px;
 }
 
-.logout-btn {
-  margin-left: auto;
-  border: none;
-  background: transparent;
-  color: #ef4444;
-  cursor: pointer;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  display: flex;
+.user-info-antd {
+  width: 100%;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.user-info-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-label {
+  font-size: 0.75rem;
+}
+
+.user-id-typo {
+  font-size: 0.8rem;
+  max-width: 130px;
+}
+
+.user-info-antd .logout-btn-antd,
+.logout-btn-antd {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .main-content {

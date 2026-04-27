@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { App as AntdApp, Button, Popconfirm, Space, Typography } from "antd";
+import { DeleteOutlined, LogoutOutlined } from "@ant-design/icons";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import api from "./api";
@@ -150,6 +152,7 @@ function RegisterPage() {
 }
 
 function DashboardPage() {
+  const { message } = AntdApp.useApp();
   const navigate = useNavigate();
   const [productName, setProductName] = useState("");
   const [productDesc, setProductDesc] = useState("");
@@ -258,6 +261,19 @@ function DashboardPage() {
     setSelectedModel("regression");
   };
 
+  const deleteHistoryItem = async (id: number) => {
+    try {
+      await api.delete(`/history/${id}`);
+      setHistory((prev) => prev.filter((x) => x.id !== id));
+      if (detail?.id === id) {
+        startNewSession();
+      }
+      message.success("已删除该条记录。");
+    } catch {
+      message.error("删除失败，请重试。");
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
@@ -309,19 +325,69 @@ function DashboardPage() {
           <div className="history-header">最近记录</div>
           <div className="history-list">
             {history.map((h) => (
-              <div key={h.id} className={`history-item ${detail?.id === h.id ? "active" : ""}`} onClick={() => loadDetail(h.id)}>
-                <span>{h.product_name}</span>
+              <div
+                key={h.id}
+                className={`history-item ${detail?.id === h.id ? "active" : ""}`}
+                onClick={() => void loadDetail(h.id)}
+              >
+                <span className="history-item-title">{h.product_name}</span>
+                <span
+                  className="history-item-actions"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <Popconfirm
+                    title="删除这条历史记录？"
+                    description="记录与相关上传文件将一并删除，此操作不可恢复。"
+                    okText="删除"
+                    okButtonProps={{ danger: true }}
+                    cancelText="取消"
+                    onConfirm={() => void deleteHistoryItem(h.id)}
+                  >
+                    <Button
+                      type="text"
+                      size="small"
+                      danger
+                      className="history-delete-btn"
+                      icon={<DeleteOutlined />}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </Popconfirm>
+                </span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="sidebar-bottom">
-          <div className="user-info">
-            <span>{`用户ID: ${currentUserId}`}</span>
-            <button className="logout-btn" title="退出登录" onClick={logout}>
-              X
-            </button>
+          <div className="user-info user-info-antd">
+            <Space align="center" className="user-info-main" size={4}>
+              <Typography.Text type="secondary" className="user-label">
+                用户
+              </Typography.Text>
+              <Typography.Text
+                className="user-id-typo"
+                copyable={{ text: String(currentUserId) }}
+                ellipsis={{ tooltip: `用户ID：${currentUserId}` }}
+              >
+                {currentUserId}
+              </Typography.Text>
+            </Space>
+            <Popconfirm
+              title="确定退出登录？"
+              okText="退出"
+              cancelText="取消"
+              onConfirm={logout}
+            >
+              <Button
+                type="text"
+                danger
+                className="logout-btn-antd"
+                icon={<LogoutOutlined />}
+                title="退出登录"
+              />
+            </Popconfirm>
           </div>
         </div>
       </aside>
