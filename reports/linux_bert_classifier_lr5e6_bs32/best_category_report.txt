@@ -1,0 +1,10 @@
+                          precision    recall  f1-score   support
+
+                    Bags     1.0000    1.0000    1.0000         5
+Clothing and Accessories     1.0000    0.9998    0.9999      5125
+                Footwear     0.9895    1.0000    0.9947        94
+                    Toys     0.0000    0.0000    0.0000         0
+
+                accuracy                         0.9998      5224
+               macro avg     0.7474    0.7500    0.7487      5224
+            weighted avg     0.9998    0.9998    0.9998      5224

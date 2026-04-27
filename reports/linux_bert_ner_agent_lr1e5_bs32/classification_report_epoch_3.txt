@@ -1,0 +1,9 @@
+              precision    recall  f1-score   support
+
+       BRAND     0.7534    0.8929    0.8172       308
+       COLOR     0.8702    0.8848    0.8774       356
+      FABRIC     0.5208    0.5875    0.5521       320
+
+   micro avg     0.7151    0.7907    0.7510       984
+   macro avg     0.7148    0.7884    0.7489       984
+weighted avg     0.7200    0.7907    0.7528       984

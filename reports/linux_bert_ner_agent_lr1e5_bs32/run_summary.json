@@ -1,0 +1,41 @@
+{
+  "best_epoch": 12,
+  "best_val_f1": 0.7737801872843765,
+  "args": {
+    "project_root": "/data/cloud_storage/PythonProject",
+    "input_jsonl": "output/agent_bio_annotations.cleaned.jsonl",
+    "model_name": "/tmp/bert-base-uncased",
+    "max_len": 256,
+    "batch_size": 32,
+    "epochs": 12,
+    "learning_rate": 2e-05,
+    "test_size": 0.2,
+    "seed": 42,
+    "patience": 3,
+    "num_workers": 8,
+    "save_dir": "/tmp/linux_bert_ner_agent",
+    "report_dir": "/tmp/reports_linux_bert_ner_agent_lr2e5_bs32"
+  },
+  "paths": {
+    "project_root": "/data/cloud_storage/PythonProject",
+    "input_jsonl": "/data/cloud_storage/PythonProject/output/agent_bio_annotations.cleaned.jsonl",
+    "model_name": "/tmp/bert-base-uncased",
+    "save_dir": "/tmp/linux_bert_ner_agent",
+    "report_dir": "/tmp/reports_linux_bert_ner_agent_lr2e5_bs32",
+    "best_checkpoint": "/tmp/linux_bert_ner_agent/best_ner_new.pth"
+  },
+  "dataset": {
+    "total_samples": 1832,
+    "train_samples": 1465,
+    "val_samples": 367,
+    "label_list": [
+      "O",
+      "B-BRAND",
+      "I-BRAND",
+      "B-COLOR",
+      "I-COLOR",
+      "B-FABRIC",
+      "I-FABRIC"
+    ]
+  }
+}

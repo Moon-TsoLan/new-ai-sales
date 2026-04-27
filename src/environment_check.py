@@ -31,13 +31,12 @@ libraries_to_test = {
     'tqdm': {'required': False},  # 若不需要可改为 False
 
     # 机器学习 / 深度学习
-    'sklearn': {'required': False, 'import_name': 'sklearn'},  # 注意：通常导入 sklearn 而不是 scikit-learn
+    'sklearn': {'required': True, 'import_name': 'sklearn'},  # pip 包名是 scikit-learn，但导入名是 sklearn
     'torch': {'required': False},
     'transformers': {'required': False},
     'seqeval': {'required': False},
     'joblib':{'required': False},
     'shap':{'required': True},
-    'scikit-learn':{'required': True},
 
     # 其他常用标准库（标准库无需测试，但为了完整性可以保留）
     'pathlib': {'required': False, 'is_std': True},
@@ -83,8 +82,8 @@ def test_library(name, required=True, import_name=None, is_std=False):
 
     except ImportError:
         if required:
-            print(f"[FAIL] {name:15s} 未安装（必要库，脚本将退出）")
-            sys.exit(1)
+            print(f"[FAIL] {name:15s} 未安装（必要库）")
+            return False
         else:
             print(f"[WARN] {name:15s} 未安装（可选，跳过）")
             return False
@@ -102,24 +101,34 @@ if __name__ == "__main__":
     print("=" * 60 + "\n")
 
     # 逐个测试库
+    missing_required = []
     for lib_name, info in libraries_to_test.items():
-        test_library(
+        ok = test_library(
             name=lib_name,
             required=info.get('required', False),
             import_name=info.get('import_name', None),
             is_std=info.get('is_std', False)
         )
-    # 测试torch.cuda
-    import torch
-    cuda_available = torch.cuda.is_available()
-    print(f"torch.cuda.is_available(): {cuda_available}")
-    if cuda_available:
-        # CUDA 可用时才获取设备信息，避免无 CUDA 环境直接崩溃
-        print(f"torch.cuda.get_device_name(0): {torch.cuda.get_device_name(0)}")
-        print(f"torch.version.cuda: {torch.version.cuda}")
-    else:
-        print("CUDA不可用（跳过 get_device_name / CUDA 版本）")
+        if not ok and info.get('required', False):
+            missing_required.append(lib_name)
+    # 测试 torch.cuda（仅当 torch 可导入时）
+    try:
+        import torch
+        cuda_available = torch.cuda.is_available()
+        print(f"torch.cuda.is_available(): {cuda_available}")
+        if cuda_available:
+            # CUDA 可用时才获取设备信息，避免无 CUDA 环境直接崩溃
+            print(f"torch.cuda.get_device_name(0): {torch.cuda.get_device_name(0)}")
+            print(f"torch.version.cuda: {torch.version.cuda}")
+        else:
+            print("CUDA不可用（跳过 get_device_name / CUDA 版本）")
+    except ImportError:
+        print("未安装 torch（跳过 CUDA 检查）")
 
     print("\n" + "=" * 60)
-    print(" 测试完成。")
+    if missing_required:
+        print(f" 测试完成，但以下必要库缺失: {', '.join(missing_required)}")
+        print(" 请在当前环境安装后重试。")
+    else:
+        print(" 测试完成。")
     print("=" * 60)

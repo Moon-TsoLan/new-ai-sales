@@ -1,0 +1,33 @@
+{
+  "best_epoch": 16,
+  "best_val_loss": 0.01694277037544142,
+  "args": {
+    "project_root": "/data/cloud_storage/PythonProject",
+    "csv_path": "data/processed/processed.csv",
+    "model_name": "/tmp/bert-base-uncased",
+    "max_len": 128,
+    "batch_size": 32,
+    "epochs": 20,
+    "learning_rate": 5e-06,
+    "test_size": 0.3,
+    "seed": 42,
+    "num_workers": 8,
+    "save_dir": "/tmp/linux_bert_classifier",
+    "report_dir": "/tmp/reports_linux_bert_classifier_lr5e6_bs32"
+  },
+  "paths": {
+    "project_root": "/data/cloud_storage/PythonProject",
+    "csv_path": "/data/cloud_storage/PythonProject/data/processed/processed.csv",
+    "model_name": "/tmp/bert-base-uncased",
+    "save_dir": "/tmp/linux_bert_classifier",
+    "report_dir": "/tmp/reports_linux_bert_classifier_lr5e6_bs32",
+    "best_checkpoint": "/tmp/linux_bert_classifier/best_classifier.pth"
+  },
+  "dataset": {
+    "total_samples": 17412,
+    "train_samples": 12188,
+    "val_samples": 5224,
+    "num_categories": 4,
+    "num_sub_categories": 18
+  }
+}
